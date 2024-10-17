@@ -13,8 +13,8 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": {
-      "@minecraft/server": ["./tests/lib/minecraft-server.ts"],
-      "@minecraft/server-net": ["./tests/lib/minecraft-server-net.ts"]
+      "@minecraft/server": ["./lib/minecraft-server.ts"],
+      "@minecraft/server-net": ["./lib/minecraft-server-net.ts"]
     }
   },
   "plugins": [

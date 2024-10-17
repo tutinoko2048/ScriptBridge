@@ -7,7 +7,7 @@ const client = new ScriptBridgeClient({
 
 client.connect()
   .then(() => {
-    console.log('[ScriptBridgeClient] connected!!!');
+    console.log('[ScriptBridgeClient] connected!');
   })
   .catch(e => {
     console.error('[ScriptBridgeClient] failed to connect', e.message);
@@ -25,7 +25,7 @@ const rl = createInterface({
 });
 
 rl.on('line', async message => {
-  const res = await client.send<TestAction>('custom:test', { message });
+  const res = await client.send<TestAction>('custom:test', { message }).catch(e => console.error(e.message));
   console.log(res);
 });
 

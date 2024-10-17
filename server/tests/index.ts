@@ -3,8 +3,11 @@ import { createInterface } from 'node:readline/promises';
 
 const server = new ScriptBridgeServer({ port: 8000 });
 server.start();
-server.on('serverOpen', () => console.log('[Event] open'));
-server.on('serverClose', () => console.log('[Event] close'));
+server.on('serverOpen', () => console.log('[Event] serverOpen'));
+server.on('serverClose', () => console.log('[Event] serverClose'));
+server.on('error', e => console.error('[Event] error', e.message));
+server.on('clientConnect', session => console.log('[Event] clientConnect', session.id));
+server.on('clientDisconnect', session => console.log('[Event] clientDisconnect', session.id));
 
 type TestAction = BaseAction<
   'custom:test',

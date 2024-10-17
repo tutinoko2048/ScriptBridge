@@ -53,3 +53,6 @@ export enum PayloadType {
   Response
 }
 
+export enum ConnectionMode {
+  Polling,
+}

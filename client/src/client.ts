@@ -4,6 +4,7 @@ import {
   type ClientResponse,
   type ServerRequest,
   type ServerResponse,
+  ConnectionMode,
   PayloadType,
   ResponseErrorReason
 } from './types';
@@ -17,10 +18,11 @@ import { registerHandlers } from './handlers';
 type Awaitable<Value> = PromiseLike<Value> | Value;
 
 interface ClientOptions {
+  /** Server URL (including port) */
   url: string;
+  /** Custom identifier for client, this will be sent to the server */
   clientId?: string;
-  /** default=100 */
-  reconnectTimeoutTicks?: number;
+  connectionMode?: ConnectionMode;
 }
 
 type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
@@ -28,7 +30,10 @@ type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitabl
 export class ScriptBridgeClient {
   public static readonly PROTOCOL_VERSION = 1;
 
-  public clientId: string;
+  /** Custom identifier for client, this will be sent to the server */
+  public readonly clientId: string = '';
+
+  public readonly connectionMode: ConnectionMode = ConnectionMode.Polling;
 
   private readonly http = new HttpClient();
   private readonly actionHandlers = new Map<string, ActionHandler<BaseAction>>();
@@ -39,8 +44,9 @@ export class ScriptBridgeClient {
   
   constructor(options: ClientOptions) {
     this.http.baseUrl = options.url;
-    this.clientId = options.clientId ?? '';
-
+    if (options.clientId !== undefined) this.clientId = options.clientId;
+    if (options.connectionMode !== undefined) this.connectionMode = options.connectionMode;
+    
     registerHandlers(this);
   }
 

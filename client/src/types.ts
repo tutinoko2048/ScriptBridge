@@ -52,3 +52,7 @@ export enum PayloadType {
   Request,
   Response
 }
+
+export enum ConnectionMode {
+  Polling,
+}

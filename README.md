@@ -28,6 +28,9 @@ server.start();
 - Download the client from the [releases](https://github.com/tutinoko2048/ScriptBridge/releases) page.
 - Put the client in your project.
 
+> [!NOTE]
+> You need to enable Beta API toggle and allow `@minecraft/server-net` module in `[BDS]/config/permissions.json`.
+
 ### Example
 ```typescript
 import { ScriptBridgeClient } from './path/to/ScriptBridgeClient/index';

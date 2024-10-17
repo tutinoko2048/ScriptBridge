@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "ts-node --project development.tsconfig.json -r tsconfig-paths/register tests/index.ts",
+    "test": "ts-node --project tests/tsconfig.json -r tsconfig-paths/register tests/index.ts",
     "watch": "tsc --watch",
     "build": "tsc",
     "prepare": "ts-patch install -s"
