@@ -99,7 +99,9 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
       ClientRequest | ClientResponse
     >('/query', (req, res) => {
       const body = req.body;      
-      const session = this.sessions.get(body.sessionId)!;
+      const session = this.sessions.get(body.sessionId);
+
+      if (!session) return void res.sendStatus(400);
 
       if (body.type === PayloadType.Request) {
         this.emit('requestReceive', body, session);

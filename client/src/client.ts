@@ -81,6 +81,7 @@ export class ScriptBridgeClient {
   public async disconnect(reason: DisconnectReason = DisconnectReason.ClientClose) {
     if (!this.currentSessonId) throw new NoActiveSessionError();
     await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
+    this.http.cancelAll(DisconnectReason[reason]);
     this.destroy();
   }
 
@@ -96,6 +97,8 @@ export class ScriptBridgeClient {
     data?: A['request']
   ): Promise<ServerResponse<A['response']>> {
     if (!channelId.includes(':')) throw new NamespaceRequiredError(channelId);
+
+    if (!this.isConnected) throw new NoActiveSessionError();
     
     const payload: ClientRequest = {
       data,
@@ -253,9 +256,7 @@ export class ScriptBridgeClient {
     }, intervalTicks);
   }
 
-  private stopInterval(): void {
-    console.log('stopInterval');
-    
+  private stopInterval(): void {    
     if (this.queryInterval !== null) {
       system.clearRun(this.queryInterval);
       this.queryInterval = null;
