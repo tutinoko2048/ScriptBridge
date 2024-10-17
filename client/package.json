@@ -1,0 +1,22 @@
+{
+  "name": "@script-bridge/client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "ts-node --project development.tsconfig.json -r tsconfig-paths/register tests/index.ts",
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "ts-patch install -s"
+  },
+  "author": "tutinoko2048",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@minecraft/server": "1.15.0-beta.1.21.30-stable",
+    "@minecraft/server-net": "1.0.0-beta.1.21.30-stable",
+    "ts-node": "^10.9.2",
+    "ts-patch": "^3.2.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.6.2"
+  }
+}

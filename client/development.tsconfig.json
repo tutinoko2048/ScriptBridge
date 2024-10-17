@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "paths": {
+      "@minecraft/server": ["./tests/lib/minecraft-server.ts"],
+      "@minecraft/server-net": ["./tests/lib/minecraft-server-net.ts"]
+    }
+  },
+  "plugins": [
+    { "transform": "typescript-transform-paths" }
+  ]
+}
