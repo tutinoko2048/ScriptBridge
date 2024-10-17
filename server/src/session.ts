@@ -26,9 +26,9 @@ export class Session {
     this.serverInstance.emit('sessionCreate', this);
   }
 
-  public async disconnect(reason: DisconnectReason = DisconnectReason.ServerClose): Promise<void> {
+  public async disconnect(reason: DisconnectReason = DisconnectReason.Disconnect): Promise<void> {
     await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
-    this.serverInstance.emit('clientDisconnect', this);
+    this.serverInstance.emit('clientDisconnect', this, reason);
     this.destroy();
   }
 

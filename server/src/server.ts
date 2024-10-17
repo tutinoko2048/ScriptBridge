@@ -8,23 +8,9 @@ import { ClientAction } from './client-action';
 import { NamespaceRequiredError, UnhandledRequestError } from './errors';
 import { InternalActions } from './actions';
 import { registerHandlers } from './handlers';
+import { DisconnectReason } from './enums';
 
 type Awaitable<Value> = PromiseLike<Value> | Value;
-
-interface ServerEvents {
-  serverOpen: [];
-  serverClose: [];
-  clientConnect: [session: Session];
-  clientDisconnect: [session: Session];
-  sessionCreate: [session: Session];
-  sessionDestroy: [session: Session];
-  queryReceive: [session: Session];
-  requestSend: [request: ServerRequest, session: Session];
-  responseSend: [response: ServerResponse, session: Session];
-  requestReceive: [request: ClientRequest, session: Session];
-  responseReceive: [response: ClientResponse, session: Session];
-  error: [error: Error];
-}
 
 interface ServerOptions {
   port: number;
@@ -218,4 +204,19 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
     }
     awaitingResponse(response);
   }
+}
+
+interface ServerEvents {
+  serverOpen: [];
+  serverClose: [];
+  clientConnect: [session: Session];
+  clientDisconnect: [session: Session, reason: DisconnectReason];
+  sessionCreate: [session: Session];
+  sessionDestroy: [session: Session];
+  queryReceive: [session: Session];
+  requestSend: [request: ServerRequest, session: Session];
+  responseSend: [response: ServerResponse, session: Session];
+  requestReceive: [request: ClientRequest, session: Session];
+  responseReceive: [response: ClientResponse, session: Session];
+  error: [error: Error];
 }

@@ -24,7 +24,7 @@ export const registerHandlers = (server: ScriptBridgeServer) => {
 
   server.registerHandler<InternalActions.Disconnect>(InternalAction.Disconnect, (action) => {
     const { session } = action;
-    server.emit('clientDisconnect', session);
+    server.emit('clientDisconnect', session, action.data.reason);
     session.destroy();
     action.respond();
   });
