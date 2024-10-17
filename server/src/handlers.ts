@@ -16,6 +16,8 @@ export const registerHandlers = (server: ScriptBridgeServer) => {
     }
 
     session.clientId = clientId;
+
+    session.onConnect();
     server.emit('clientConnect', session);
   });
 

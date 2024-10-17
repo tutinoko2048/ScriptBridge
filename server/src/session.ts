@@ -12,11 +12,13 @@ export class Session {
   /** client-defined id */
   public clientId: string;
 
-  public readonly awaitingResponses = new Map<string, (response: ClientResponse) => void>();
-
+  public readonly _awaitingResponses = new Map<string, (response: ClientResponse) => void>();
+  
   private readonly sendQueue: ServerRequest[] = [];
   private readonly deltaTimes: number[] = [];
-  
+  private lastQueryReceivedAt: number | null = null;
+  private connectionCheckInterval: NodeJS.Timeout | null = null;
+
   constructor(
     private readonly serverInstance: ScriptBridgeServer
   ) {
@@ -32,6 +34,7 @@ export class Session {
 
   public destroy(): void {
     this.clearResponses();
+    this.stopConnectionCheck();
     this.serverInstance.sessions.delete(this.id);
     this.serverInstance.emit('sessionDestroy', this);
   }
@@ -55,7 +58,7 @@ export class Session {
 
     return new Promise((resolve) => {
       const to = setTimeout(() => {
-        this.awaitingResponses.delete(requestId);
+        this._awaitingResponses.delete(requestId);
         resolve({
           type: PayloadType.Response,
           error: true,
@@ -66,8 +69,8 @@ export class Session {
         });
       }, timeout);
 
-      this.awaitingResponses.set(requestId, (response: ClientResponse<A['response']>) => {
-        this.awaitingResponses.delete(requestId);
+      this._awaitingResponses.set(requestId, (response: ClientResponse<A['response']>) => {
+        this._awaitingResponses.delete(requestId);
         clearTimeout(to);
         resolve(response);
         
@@ -92,13 +95,19 @@ export class Session {
   }
 
   public getQueue(): ServerRequest[] {
+    this.lastQueryReceivedAt = Date.now();
+
     const queue = this.sendQueue.slice();
     this.sendQueue.length = 0;
     return queue;
   }
 
+  public onConnect(): void {
+    this.startConnectionCheck();
+  }
+  
   private clearResponses(): void {
-    for (const [requestId, respond] of this.awaitingResponses) {
+    for (const [requestId, respond] of this._awaitingResponses) {
       respond({
         type: PayloadType.Response,
         error: true,
@@ -108,6 +117,26 @@ export class Session {
         requestId,
       });
     }
-    this.awaitingResponses.clear();
+    this._awaitingResponses.clear();
+  }
+
+  private startConnectionCheck(): void {
+    const options = this.serverInstance.options;
+    this.connectionCheckInterval = setInterval(() => {
+      if (
+        this.lastQueryReceivedAt &&
+        Date.now() - this.lastQueryReceivedAt > options.requestIntervalTicks! * 50 * options.timeoutThresholdMultiplier!
+      ) {
+        this.disconnect(DisconnectReason.ConnectionLost);
+        this.stopConnectionCheck();
+      }
+    }, 200);
+  }
+  
+  private stopConnectionCheck(): void {
+    if (this.connectionCheckInterval) {
+      clearInterval(this.connectionCheckInterval);
+      this.connectionCheckInterval = null;
+    }
   }
 }

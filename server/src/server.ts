@@ -28,17 +28,25 @@ interface ServerEvents {
 
 interface ServerOptions {
   port: number;
+
   /** The interval ticks clients should wait before sending a query. Defaults to `8` */
   requestIntervalTicks?: number;
+  
+  /** 
+   * A multiplier indicating how many times the `requestIntervalTicks` 
+   * can be exceeded before considering the request as failed. 
+   * Defaults to `20`.
+   * Set `Infinity` to disable auto disconnection.
+   */
+  timeoutThresholdMultiplier?: number;
 }
 
 type ActionHandler<T extends BaseAction> = (action: ClientAction<T>) => Awaitable<void>;
 
 export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
   public static readonly PROTOCOL_VERSION = 1;
-  
-  public readonly port: number;
-  public readonly requestIntervalTicks: number;
+
+  public readonly options: ServerOptions;
   public readonly sessions = new Map<string, Session>();
 
   private readonly server: http.Server;
@@ -52,8 +60,9 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
 
-    this.port = options.port;
-    this.requestIntervalTicks = options.requestIntervalTicks ?? 8;
+    this.options = options;
+    this.options.requestIntervalTicks = options.requestIntervalTicks ?? 8;
+    this.options.timeoutThresholdMultiplier = options.timeoutThresholdMultiplier ?? 20;
 
     this.app.get<
       void,
@@ -66,7 +75,7 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
         type: PayloadType.Response,
         data: {
           sessionId: session.id,
-          requestIntervalTicks: this.requestIntervalTicks,
+          requestIntervalTicks: this.options.requestIntervalTicks!,
         },
       });
     });
@@ -87,8 +96,10 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
         });
         return;
       }
+
       const requests = session.getQueue();
       res.json(requests);
+
       for (const request of requests) this.emit('requestSend', request, session);
       this.emit('queryReceive', session);
     });
@@ -125,7 +136,7 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
 
   public async start(): Promise<void> {
     return new Promise<void>(resolve => {
-      this.server.listen(this.port, () => {
+      this.server.listen(this.options.port, () => {
         this.emit('serverOpen');
         resolve();
       });
@@ -200,7 +211,7 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
   }
 
   private handleResponse(session: Session, response: ClientResponse): void {
-    const awaitingResponse = session.awaitingResponses.get(response.requestId);
+    const awaitingResponse = session._awaitingResponses.get(response.requestId);
     if (!awaitingResponse) {
       this.emit('error', new Error(`Received response for unknown request: ${response.requestId}`));
       return;
