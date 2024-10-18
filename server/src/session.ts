@@ -20,23 +20,23 @@ export class Session {
   private connectionCheckInterval: NodeJS.Timeout | null = null;
 
   constructor(
-    private readonly serverInstance: ScriptBridgeServer
+    private readonly server: ScriptBridgeServer
   ) {
-    this.serverInstance.sessions.set(this.id, this);
-    this.serverInstance.emit('sessionCreate', this);
+    this.server.sessions.set(this.id, this);
+    this.server.emit('sessionCreate', this);
   }
 
   public async disconnect(reason: DisconnectReason = DisconnectReason.Disconnect): Promise<void> {
-    await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
-    this.serverInstance.emit('clientDisconnect', this, reason);
+    await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason }, 5_000);
+    this.server.emit('clientDisconnect', this, reason);
     this.destroy();
   }
 
   public destroy(): void {
     this.clearResponses();
     this.stopConnectionCheck();
-    this.serverInstance.sessions.delete(this.id);
-    this.serverInstance.emit('sessionDestroy', this);
+    this.server.sessions.delete(this.id);
+    this.server.emit('sessionDestroy', this);
   }
 
   public send<A extends BaseAction = BaseAction>(
@@ -74,7 +74,7 @@ export class Session {
         clearTimeout(to);
         resolve(response);
         
-        this.serverInstance.emit('responseReceive', response, this);
+        this.server.emit('responseReceive', response, this);
 
         if (this.deltaTimes.length >= 10) this.deltaTimes.shift();
         this.deltaTimes.push(Date.now() - sentAt);
@@ -82,14 +82,17 @@ export class Session {
     });
   }
 
-  public async sendPing(): Promise<number> {
+  public async sendPing(): Promise<{ roundTrip: number, toClient: number }> {
     const start = Date.now();
     const res = await this.send<InternalActions.Ping>(InternalAction.Ping, undefined, 20_000);
     if (res.error) throw new Error(res.message);
-    return Date.now() - start;
+    return {
+      roundTrip: Date.now() - start,
+      toClient: res.data.receivedAt - start,
+    };
   }
 
-  public get ping(): number {
+  public get averagePing(): number {
     if (this.deltaTimes.length === 0) return -1;
     return this.deltaTimes.reduce((a, b) => a + b, 0) / this.deltaTimes.length;
   }
@@ -121,11 +124,10 @@ export class Session {
   }
 
   private startConnectionCheck(): void {
-    const options = this.serverInstance.options;
     this.connectionCheckInterval = setInterval(() => {
       if (
         this.lastQueryReceivedAt &&
-        Date.now() - this.lastQueryReceivedAt > options.requestIntervalTicks! * 50 * options.timeoutThresholdMultiplier!
+        Date.now() - this.lastQueryReceivedAt > this.server.requestIntervalTicks * 50 * this.server.timeoutThresholdMultiplier
       ) {
         this.disconnect(DisconnectReason.ConnectionLost);
         this.stopConnectionCheck();

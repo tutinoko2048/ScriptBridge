@@ -32,8 +32,10 @@ type ActionHandler<T extends BaseAction> = (action: ClientAction<T>) => Awaitabl
 export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
   public static readonly PROTOCOL_VERSION = 1;
 
-  public readonly options: ServerOptions;
   public readonly sessions = new Map<string, Session>();
+  public readonly port: number;
+  public readonly requestIntervalTicks: number = 8;
+  public readonly timeoutThresholdMultiplier: number = 20;
 
   private readonly server: http.Server;
   private readonly app: express.Application;
@@ -46,9 +48,9 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
 
-    this.options = options;
-    this.options.requestIntervalTicks = options.requestIntervalTicks ?? 8;
-    this.options.timeoutThresholdMultiplier = options.timeoutThresholdMultiplier ?? 20;
+    this.port = options.port;
+    if (options.requestIntervalTicks !== undefined) this.requestIntervalTicks = options.requestIntervalTicks;
+    if (options.timeoutThresholdMultiplier !== undefined) this.timeoutThresholdMultiplier = options.timeoutThresholdMultiplier;
 
     this.app.get<
       void,
@@ -61,7 +63,7 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
         type: PayloadType.Response,
         data: {
           sessionId: session.id,
-          requestIntervalTicks: this.options.requestIntervalTicks!,
+          requestIntervalTicks: this.requestIntervalTicks,
         },
       });
     });
@@ -123,7 +125,7 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
 
   public async start(): Promise<void> {
     return new Promise<void>(resolve => {
-      this.server.listen(this.options.port, () => {
+      this.server.listen(this.port, () => {
         this.emit('serverOpen');
         resolve();
       });
