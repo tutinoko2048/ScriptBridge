@@ -130,7 +130,10 @@ export class ScriptBridgeClient {
     this.actionHandlers.set(channelId, handler);
   }
 
-  private async handleRequest(request: ServerRequest, respond: (data: ClientResponse) => void): Promise<void> {
+  private async handleRequest(
+    request: ServerRequest,
+    respond: (data: ClientResponse) => void
+  ): Promise<void> {
     const { requestId, channelId, data } = request;
     const handler = this.actionHandlers.get(channelId);
     if (!handler) {

@@ -8,4 +8,10 @@ export const registerHandlers = (client: ScriptBridgeClient) => {
     console.warn(`[ScriptBridgeClient] disconnected from server: ${DisconnectReason[action.data.reason]}`);
     client.destroy();
   });
+
+  client.registerHandler<InternalActions.Ping>(InternalAction.Ping, (action) => {
+    action.respond({
+      receivedAt: Date.now()
+    });
+  });
 }
