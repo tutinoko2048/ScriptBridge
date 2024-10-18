@@ -25,6 +25,15 @@ const rl = createInterface({
 });
 
 rl.on('line', async message => {
+  if (message === '.connect') {
+    client.connect();
+    return;
+  }
+  if (message === '.disconnect') {
+    client.disconnect();
+    return;
+  }
+
   const res = await client.send<TestAction>('custom:test', { message }).catch(e => console.error(e.message));
   console.log(res);
 });

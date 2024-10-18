@@ -1,27 +1,39 @@
 import { http, HttpHeader, HttpRequest, HttpRequestMethod } from '@minecraft/server-net';
 import { URLParams } from './utils/URLParams';
 
+interface GetOptions {
+  params?: Record<string, string>;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
+interface PostOptions {
+  body?: string;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
 export class HttpClient {
   public baseUrl: string = '';
 
-  public async GET(path: string, headers?: Record<string, string>, params?: Record<string, string>, timeout?: number): Promise<string> {
+  public async GET(path: string, options?: GetOptions): Promise<string> {
     let url = this.baseUrl + path;
-    if (params) url += '?' + new URLParams(params).toString();
+    if (options?.params) url += '?' + new URLParams(options.params).toString();
     const request = new HttpRequest(url)
-      .setMethod(HttpRequestMethod.Get)
-      .setHeaders(this.toHttpHeaders(headers))
-    if (timeout) request.setTimeout(timeout);
+      .setMethod(HttpRequestMethod.Get);
+    if (options?.headers) request.setHeaders(this.toHttpHeaders(options.headers))
+    if (options?.timeout) request.setTimeout(options.timeout);
     const response = await http.request(request);
     if (response.status !== 200) throw new Error(`Failed to GET ${path} with status ${response.status}`);
     return response.body;
   }
 
-  public async POST(path: string, headers?: Record<string, string>, body?: string, timeout?: number): Promise<string> {
+  public async POST(path: string, options?: PostOptions): Promise<string> {
     const request = new HttpRequest(this.baseUrl + path)
-      .setMethod(HttpRequestMethod.Post)
-      .setHeaders(this.toHttpHeaders(headers));
-    if (body) request.setBody(body);
-    if (timeout) request.setTimeout(timeout);
+      .setMethod(HttpRequestMethod.Post);
+    if (options?.headers) request.setHeaders(this.toHttpHeaders(options.headers));
+    if (options?.body) request.setBody(options.body);
+    if (options?.timeout) request.setTimeout(options.timeout);
     const response = await http.request(request);
     if (response.status !== 200) throw new Error(`Failed to POST ${path} with status ${response.status}`);
     return response.body;

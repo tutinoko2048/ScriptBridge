@@ -72,7 +72,8 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
       void,
       { sessionId: string }
     >('/query', (req, res) => {
-      const session = this.sessions.get(req.query.sessionId);
+      const sessionId = req.headers['session-id'] as string;
+      const session = sessionId ? this.sessions.get(sessionId) : undefined;
       if (!session) {
         res.json({
           type: PayloadType.Response,

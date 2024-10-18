@@ -1,6 +1,6 @@
 export enum DisconnectReason {
-  ServerClose,
-  ClientClose,
+  Disconnect,
   OutdatedServer,
   OutdatedClient,
+  ConnectionLost,
 }

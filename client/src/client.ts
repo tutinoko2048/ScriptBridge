@@ -78,7 +78,7 @@ export class ScriptBridgeClient {
     });
   }
 
-  public async disconnect(reason: DisconnectReason = DisconnectReason.ClientClose) {
+  public async disconnect(reason: DisconnectReason = DisconnectReason.Disconnect) {
     if (!this.currentSessonId) throw new NoActiveSessionError();
     await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
     this.http.cancelAll(DisconnectReason[reason]);
@@ -107,11 +107,10 @@ export class ScriptBridgeClient {
       type: PayloadType.Request
     };
 
-    const rawBody = await this.http.POST(
-      '/query',
-      { 'Content-Type': 'application/json' },
-      JSON.stringify(payload)
-    );
+    const rawBody = await this.http.POST('/query', {
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
     try {
       return JSON.parse(rawBody);
@@ -181,7 +180,10 @@ export class ScriptBridgeClient {
   private async queryData(): Promise<ServerRequest[]> {
     if (!this.currentSessonId) throw new NoActiveSessionError();
 
-    const rawBody = await this.http.GET('/query', {}, { sessionId: this.currentSessonId }, 5*20);
+    const rawBody = await this.http.GET('/query', {
+      headers: { 'session-id': this.currentSessonId },
+      timeout: 5*20,
+    });
     let body: ServerResponse | ServerRequest[] | undefined;
     try {
       body = JSON.parse(rawBody);
@@ -205,7 +207,7 @@ export class ScriptBridgeClient {
   private async createSession() {    
     this.currentSessonId = null;
 
-    const rawBody = await this.http.GET('/new', undefined, undefined, 5*20);
+    const rawBody = await this.http.GET('/new', { timeout: 5*20 });
     let body: ServerResponse<InternalActions.SessionCreate['response']>;
     try {
       body = JSON.parse(rawBody);
@@ -246,8 +248,10 @@ export class ScriptBridgeClient {
 
       for (const request of requests) {
         this.handleRequest(request, response => {
-          this.http.POST('/query', { 'Content-Type': 'application/json' }, JSON.stringify(response))
-            .catch(e => console.error('[ScriptBridgeClient] Failed to send response:', e));
+          this.http.POST('/query', {
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response)
+          }).catch(e => console.error('[ScriptBridgeClient] Failed to send response:', e));
         });
       }
 

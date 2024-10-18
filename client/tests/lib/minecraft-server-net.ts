@@ -26,7 +26,7 @@ export class HttpClient {
     const { method, uri, headers, body } = config;
     const _res = await fetch(uri, {
       method,
-      headers: this.transformHeaders(headers),
+      headers: headers && this.transformHeaders(headers),
       body,
       signal: controller.signal
     });
