@@ -1,16 +1,14 @@
 {
   "name": "@script-bridge/client",
   "version": "0.1.0",
+  "description": "two-way communication system between ScriptAPI and backend server using http request",
   "private": true,
   "scripts": {
     "test": "ts-node --project tests/tsconfig.json -r tsconfig-paths/register tests/index.ts",
     "watch": "tsc --watch",
-    "build": "tsc",
+    "build": "tsc --noEmit && node build.mjs",
     "prepare": "ts-patch install -s"
   },
-  "author": "tutinoko2048",
-  "license": "MIT",
-  "description": "",
   "devDependencies": {
     "@minecraft/server": "1.15.0-beta.1.21.30-stable",
     "@minecraft/server-net": "1.0.0-beta.1.21.30-stable",
@@ -18,5 +16,12 @@
     "ts-patch": "^3.2.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.2"
-  }
+  },
+  "homepage": "https://github.com/tutinoko2048/ScriptBridge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tutinoko2048/ScriptBridge.git"
+  },
+  "author": "tutinoko2048",
+  "license": "MIT"
 }
