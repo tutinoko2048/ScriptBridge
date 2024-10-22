@@ -2,16 +2,15 @@
   "include": ["src"],
   "compilerOptions": {
     "module": "ES2020",
-    "target": "es2021",
+    "target": "ES2021",
     "alwaysStrict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitThis": true,
     "moduleResolution": "Node10",
-    "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "outDir": "scripts",
+    "outDir": "build",
     "noUncheckedIndexedAccess": true,
   }
 }
