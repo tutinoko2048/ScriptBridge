@@ -14,8 +14,7 @@
     "@minecraft/server-net": "1.0.0-beta.1.21.30-stable",
     "ts-node": "^10.9.2",
     "ts-patch": "^3.2.1",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.6.2"
+    "tsconfig-paths": "^4.2.0"
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
   "repository": {
@@ -23,5 +22,8 @@
     "url": "https://github.com/tutinoko2048/ScriptBridge.git"
   },
   "author": "tutinoko2048",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@script-bridge/protocol": "^0.1.0"
+  }
 }

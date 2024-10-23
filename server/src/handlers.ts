@@ -1,5 +1,8 @@
-import { InternalActions } from './actions';
-import { DisconnectReason, InternalAction } from './enums';
+import {
+  DisconnectReason,
+  InternalAction,
+  InternalActions,
+} from '@script-bridge/protocol';
 import { ScriptBridgeServer } from './server';
 
 export const registerHandlers = (server: ScriptBridgeServer) => {

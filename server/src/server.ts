@@ -1,14 +1,21 @@
 import * as http from 'node:http';
-import express from 'express';
 import { EventEmitter } from 'node:events';
-import { ServerResponse, ClientRequest, ClientResponse, PayloadType, ResponseErrorReason, ServerRequest } from './types';
-import { BaseAction } from './actions';
+import express from 'express';
+import {
+  BaseAction,
+  InternalActions,
+  DisconnectReason,
+  ServerRequest,
+  ServerResponse,
+  ClientRequest,
+  ClientResponse,
+  PayloadType,
+  ResponseErrorReason,
+} from '@script-bridge/protocol';
 import { Session } from './session';
 import { ClientAction } from './client-action';
 import { NamespaceRequiredError, UnhandledRequestError } from './errors';
-import { InternalActions } from './actions';
 import { registerHandlers } from './handlers';
-import { DisconnectReason } from './enums';
 
 type Awaitable<Value> = PromiseLike<Value> | Value;
 
