@@ -1,9 +1,16 @@
 import { randomUUID } from 'crypto';
-import { ServerRequest, ClientResponse, PayloadType, ResponseErrorReason } from './types';
-import { DisconnectReason, InternalAction } from './enums';
+import {
+  ServerRequest,
+  ClientResponse,
+  PayloadType,
+  ResponseErrorReason,
+  DisconnectReason,
+  BaseAction,
+  InternalAction,
+  InternalActions,
+} from '@script-bridge/protocol';
 import type { ScriptBridgeServer } from './server';
 import { NamespaceRequiredError } from './errors';
-import { BaseAction, InternalActions } from './actions';
 
 export class Session {
   /** session id */

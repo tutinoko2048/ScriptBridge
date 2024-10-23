@@ -12,6 +12,10 @@
 			"name": "Client",
 			"path": "../client"
 		},
+		{
+			"name": "Protocol",
+			"path": "../protocol"
+		}
 	],
 	"settings": {}
 }

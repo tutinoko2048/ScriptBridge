@@ -1,5 +1,5 @@
 {
-  "name": "@script-bridge/server",
+  "name": "@script-bridge/protocol",
   "version": "0.1.0",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
   "main": "dist/index.js",
@@ -9,28 +9,14 @@
   ],
   "scripts": {
     "build": "tsc",
+    "watch": "tsc -w",
     "prepublishOnly": "npm run build"
-  },
-  "devDependencies": {
-    "@minecraft/server": "1.14.0",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.7.4",
-    "ts-node": "^10.9.2"
-  },
-  "dependencies": {
-    "@script-bridge/protocol": "^0.1.0",
-    "express": "^4.21.0"
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tutinoko2048/ScriptBridge.git"
+    "url": "git+https://github.com/tutinoko2048/ScriptBridge.git"
   },
-  "keywords": [
-    "minecraft",
-    "script-api",
-    "server-net"
-  ],
   "author": "tutinoko2048",
   "license": "MIT"
 }

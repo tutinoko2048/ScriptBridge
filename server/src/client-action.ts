@@ -1,5 +1,5 @@
+import { BaseAction } from '@script-bridge/protocol';
 import { Session } from './session';
-import { BaseAction } from './actions';
 
 /** Represents action from client */
 export class ClientAction<T extends BaseAction> {

@@ -1,3 +1,5 @@
+import { PayloadType, ResponseErrorReason } from './enums/index';
+
 /** script->server */
 export interface ClientRequest<T = unknown> {
   type: PayloadType.Request;
@@ -39,20 +41,3 @@ export type ClientResponse<T = unknown> = {
   sessionId: string;
   requestId: string;
 };
-
-export enum ResponseErrorReason {
-  Abort = 1,
-  Timeout,
-  InvalidSession,
-  UnhandledRequest,
-  InternalError
-}
-
-export enum PayloadType {
-  Request,
-  Response
-}
-
-export enum ConnectionMode {
-  Polling,
-}

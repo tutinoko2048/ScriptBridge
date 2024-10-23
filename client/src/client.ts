@@ -6,13 +6,15 @@ import {
   type ServerResponse,
   ConnectionMode,
   PayloadType,
-  ResponseErrorReason
-} from './types';
-import { BaseAction, InternalActions } from './actions';
+  ResponseErrorReason,
+  DisconnectReason,
+  BaseAction,
+  InternalAction,
+  InternalActions,
+} from '@script-bridge/protocol';
 import { NamespaceRequiredError, NoActiveSessionError } from './errors/index';
 import { HttpClient } from './http-client';
 import { ServerAction } from './server-action';
-import { DisconnectReason, InternalAction } from './enums';
 import { registerHandlers } from './handlers';
 
 type Awaitable<Value> = PromiseLike<Value> | Value;
