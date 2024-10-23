@@ -1,4 +1,5 @@
-import { BaseAction, ScriptBridgeClient } from '../src';
+import { BaseAction } from '@script-bridge/protocol';
+import { ScriptBridgeClient } from '../src';
 import { createInterface } from 'node:readline/promises';
 
 const client = new ScriptBridgeClient({
