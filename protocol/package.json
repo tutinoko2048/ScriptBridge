@@ -8,9 +8,21 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
     "watch": "tsc -w",
     "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/import/index.d.ts",
+        "default": "./dist/import/index.js"
+      },
+      "require": {
+        "types": "./dist/require/index.d.ts",
+        "default": "./dist/require/index.js"
+      }
+    }
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
   "repository": {

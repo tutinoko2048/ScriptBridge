@@ -8,6 +8,7 @@
     "dist"
   ],
   "scripts": {
+    "test": "ts-node tests/index.ts",
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },

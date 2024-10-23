@@ -1,4 +1,5 @@
-import { BaseAction, DisconnectReason, ScriptBridgeServer } from '../src';
+import { BaseAction, DisconnectReason } from '@script-bridge/protocol';
+import { ScriptBridgeServer } from '../src';
 import { createInterface } from 'node:readline/promises';
 
 const server = new ScriptBridgeServer({ port: 8000 });
