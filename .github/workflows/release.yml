@@ -2,7 +2,7 @@ name: Release Package
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
