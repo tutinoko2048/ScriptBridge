@@ -11,6 +11,7 @@ import {
   BaseAction,
   InternalAction,
   InternalActions,
+  PROTOCOL_VERSION,
 } from '@script-bridge/protocol';
 import { NamespaceRequiredError, NoActiveSessionError } from './errors/index';
 import { HttpClient } from './http-client';
@@ -30,7 +31,7 @@ interface ClientOptions {
 type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
 
 export class ScriptBridgeClient {
-  public static readonly PROTOCOL_VERSION = 1;
+  public static readonly PROTOCOL_VERSION = PROTOCOL_VERSION;
 
   /** Custom identifier for client, this will be sent to the server */
   public readonly clientId: string = '';
@@ -56,8 +57,8 @@ export class ScriptBridgeClient {
     return !!this.currentSessonId;
   }
 
-  get ping() {
-    if (this.deltaTimes.length === 0) return 0;
+  get averagePing() {
+    if (this.deltaTimes.length === 0) return -1;
     return this.deltaTimes.reduce((a, b) => a + b, 0) / this.deltaTimes.length;
   }
 
