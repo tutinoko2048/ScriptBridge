@@ -28,13 +28,13 @@ jobs:
       - name: Read package version
         id: version
         run: |
-          previous_version=$(git describe --tags --abbrev=0)
-          current_version=$(node -p -e "require('./package.json').version")
-          if [ "$previous_version" = "v$current_version" ]; then
-            echo "Error: Version has not changed since the last release."
+          release_version=$(git describe --tags --abbrev=0)
+          package_version=$(node -p -e "require('./package.json').version")
+          if [ "$release_version" != "v$package_version" ]; then
+            echo "Error: Release version $release_version does not match package version $package_version"
             exit 1
           fi
-          echo "CURRENT_VERSION=$current_version" >> $GITHUB_ENV
+          echo "CURRENT_VERSION=$package_version" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: npm ci
