@@ -12,19 +12,23 @@ if (-not $version) {
     exit 1
 }
 
+# get this file's directory
+$path = $PSScriptRoot
+
 $versionType = $version.ToLower()
 
 # repository
+Set-Location $path/..
 npm version --no-git-tag-version $versionType
 
 # protocol
-Set-Location protocol
+Set-Location $path/../protocol
 npm version --no-git-tag-version $versionType
 
 # server
-Set-Location ../server
+Set-Location $path/../server
 npm version --no-git-tag-version $versionType
 
 # client
-Set-Location ../client
+Set-Location $path/../client
 npm version --no-git-tag-version $versionType
