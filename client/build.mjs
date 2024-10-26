@@ -19,9 +19,8 @@ await esbuild.build({
   target: 'es2021',
   charset: 'utf8',
   platform: 'neutral',
-  external: ['@minecraft/server', '@minecraft/server-net', '@script-bridge/protocol'],
+  external: ['@minecraft/server', '@minecraft/server-net'],
   bundle: true,
-  sourcemap: true,
   minify: true,
   plugins: [
     dtsPlugin({

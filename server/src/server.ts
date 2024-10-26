@@ -11,6 +11,7 @@ import {
   ClientResponse,
   PayloadType,
   ResponseErrorReason,
+  PROTOCOL_VERSION,
 } from '@script-bridge/protocol';
 import { Session } from './session';
 import { ClientAction } from './client-action';
@@ -37,7 +38,7 @@ interface ServerOptions {
 type ActionHandler<T extends BaseAction> = (action: ClientAction<T>) => Awaitable<void>;
 
 export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
-  public static readonly PROTOCOL_VERSION = 1;
+  public static readonly PROTOCOL_VERSION = PROTOCOL_VERSION;
 
   public readonly sessions = new Map<string, Session>();
   public readonly port: number;

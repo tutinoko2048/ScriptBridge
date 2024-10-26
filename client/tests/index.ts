@@ -27,11 +27,13 @@ const rl = createInterface({
 
 rl.on('line', async message => {
   if (message === '.connect') {
-    client.connect();
+    await client.connect();
+    console.log('[ScriptBridgeClient] connected');
     return;
   }
   if (message === '.disconnect') {
-    client.disconnect();
+    await client.disconnect();
+    console.log('[ScriptBridgeClient] disconnected');
     return;
   }
 
