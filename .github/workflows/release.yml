@@ -1,0 +1,82 @@
+name: Release Package
+
+on:
+  release:
+    types: [created]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Read package version
+        id: version
+        run: |
+          previous_version=$(git describe --tags --abbrev=0)
+          current_version=$(node -p -e "require('./package.json').version")
+          if [ "$previous_version" = "v$current_version" ]; then
+            echo "Error: Version has not changed since the last release."
+            exit 1
+          fi
+          echo "CURRENT_VERSION=$current_version" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: "[protocol] Build and Publish"
+        run: |
+          cd protocol
+          npm run build
+          npm publish --access public
+          
+      - name: "[server] Build and Publish"
+        run: |
+          cd server
+          npm run build
+          npm publish --access public
+
+      - name: "[client] Build"
+        run: |
+          cd client
+          npm run build
+          zip script-bridge-client-v${{ env.CURRENT_VERSION }}.zip build/script-bridge-client.js build/script-bridge-client.d.ts
+
+      - name: "[client] Upload Release Asset (JS)"
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: client/build/script-bridge-client.js
+          asset_name: script-bridge-client.js
+          asset_content_type: application/javascript
+
+      - name: "[client] Upload Release Asset (DTS)"
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: client/build/script-bridge-client.d.ts
+          asset_name: script-bridge-client.d.ts
+          asset_content_type: application/typescript
+
+      - name: "[client] Upload Release Asset (ZIP)"
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: client/build/script-bridge-client-v${{ env.CURRENT_VERSION }}.zip
+          asset_name: script-bridge-client-v${{ env.CURRENT_VERSION }}.zip
+          asset_content_type: application/zip
