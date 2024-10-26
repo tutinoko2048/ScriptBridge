@@ -1,6 +1,6 @@
 {
   "name": "@script-bridge/protocol",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
