@@ -43,7 +43,7 @@ server.start();
 
 ### Example
 ```typescript
-import { ScriptBridgeClient } from './path/to/ScriptBridgeClient/index';
+import { ScriptBridgeClient } from './path/to/script-bridge-client';
 const client = new ScriptBridgeClient({ url: 'http://localhost:8000' });
 client.connect();
 ```
