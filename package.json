@@ -8,8 +8,8 @@
     "typescript": "^5.6.3"
   },
   "workspaces": [
+    "protocol",
     "server",
-    "client",
-    "protocol"
+    "client"
   ]
 }
