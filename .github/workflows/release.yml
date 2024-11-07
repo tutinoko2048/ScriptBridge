@@ -38,7 +38,7 @@ jobs:
           echo "CURRENT_VERSION=$package_version" >> $GITHUB_ENV
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --workspaces
 
       - name: "[protocol] Build and Publish"
         run: |
