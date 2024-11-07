@@ -1,6 +1,6 @@
 {
   "name": "@script-bridge/client",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
   "private": true,
   "scripts": {
