@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "ts-node --project tests/tsconfig.json -r tsconfig-paths/register tests/index.ts",
-    "watch": "tsc --watch",
+    "watch": "node --watch build.mjs",
     "build": "tsc --noEmit && node build.mjs",
     "prepare": "ts-patch install -s"
   },

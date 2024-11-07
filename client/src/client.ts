@@ -210,7 +210,7 @@ export class ScriptBridgeClient {
     return [];
   }
 
-  private async createSession() {    
+  private async createSession() {
     this.currentSessonId = null;
 
     const rawBody = await this.http.GET('/new', { timeout: 5*20 });

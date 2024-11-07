@@ -2,8 +2,6 @@
   "name": "@script-bridge/protocol",
   "version": "0.1.5",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -12,6 +10,9 @@
     "watch": "tsc -w",
     "prepublishOnly": "npm run build"
   },
+  "main": "dist/require/index.js",
+  "module": "dist/import/index.js",
+  "types": "dist/import/index.d.ts",
   "exports": {
     ".": {
       "import": {

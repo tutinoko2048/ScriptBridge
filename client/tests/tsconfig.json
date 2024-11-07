@@ -10,8 +10,5 @@
       "@minecraft/server": ["./lib/minecraft-server.ts"],
       "@minecraft/server-net": ["./lib/minecraft-server-net.ts"]
     }
-  },
-  "plugins": [
-    { "transform": "typescript-transform-paths" }
-  ]
+  }
 }
