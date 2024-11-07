@@ -19,16 +19,4 @@ $versionType = $version.ToLower()
 
 # repository
 Set-Location $path/..
-npm version --no-git-tag-version $versionType
-
-# protocol
-Set-Location $path/../protocol
-npm version --no-git-tag-version $versionType
-
-# server
-Set-Location $path/../server
-npm version --no-git-tag-version $versionType
-
-# client
-Set-Location $path/../client
-npm version --no-git-tag-version $versionType
+npm version --no-git-tag-version --workspaces --include-workspace-root $versionType

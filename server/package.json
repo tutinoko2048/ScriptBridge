@@ -15,11 +15,10 @@
   "devDependencies": {
     "@minecraft/server": "1.14.0",
     "@types/express": "^5.0.0",
-    "@types/node": "^22.7.4",
-    "ts-node": "^10.9.2"
+    "@types/node": "^22.7.4"
   },
   "dependencies": {
-    "@script-bridge/protocol": "^0.1.0",
+    "@script-bridge/protocol": "*",
     "express": "^4.21.0"
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
