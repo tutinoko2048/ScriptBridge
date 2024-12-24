@@ -104,12 +104,20 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
     this.app.post<
       void,
       ServerResponse,
-      ClientRequest | ClientResponse
+      ClientRequest | ClientResponse 
     >('/query', (req, res) => {
-      const body = req.body;      
+      const body = req.body;
       const session = this.sessions.get(body.sessionId);
 
-      if (!session) return void res.sendStatus(400);
+      if (!session) {
+        res.json({
+          type: PayloadType.Response,
+          error: true,
+          errorReason: ResponseErrorReason.InvalidSession,
+          message: 'Invalid session',
+        });
+        return;
+      }
 
       if (body.type === PayloadType.Request) {
         this.emit('requestReceive', body, session);
@@ -124,7 +132,12 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
         
         res.sendStatus(200);
       } else {
-        res.sendStatus(400);
+        res.json({
+          type: PayloadType.Response,
+          error: true,
+          errorReason: ResponseErrorReason.InvalidPayload,
+          message: 'Invalid payload type',
+        });
       }
     });
 

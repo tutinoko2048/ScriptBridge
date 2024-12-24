@@ -8,10 +8,10 @@ const client = new ScriptBridgeClient({
 
 client.connect()
   .then(() => {
-    console.log('[ScriptBridgeClient] connected!');
+    console.log(new Date(), '[ScriptBridgeClient] connected!');
   })
   .catch(e => {
-    console.error('[ScriptBridgeClient] failed to connect', e.message);
+    console.error(new Date(), '[ScriptBridgeClient] failed to connect', e.message);
   });
 
 type TestAction = BaseAction<
@@ -28,18 +28,28 @@ const rl = createInterface({
 rl.on('line', async message => {
   if (message === '.connect') {
     await client.connect();
-    console.log('[ScriptBridgeClient] connected');
+    console.log(new Date(), '[ScriptBridgeClient] connected');
     return;
   }
   if (message === '.disconnect') {
     await client.disconnect();
-    console.log('[ScriptBridgeClient] disconnected');
+    console.log(new Date(), '[ScriptBridgeClient] disconnected');
+    return;
+  }
+
+  if (message === '.test') {
+    (client as any).currentSessonId += 'a';
     return;
   }
 
   const res = await client.send<TestAction>('custom:test', { message }).catch(e => console.error(e.message));
   console.log(res);
 });
+
+// setInterval(() => {
+//  client.isConnected &&
+//   client.send<TestAction>('custom:test', { message:'A' }).catch(e => console.error(new Date(), e.message));
+// }, 100)
 
 client.registerHandler<TestAction>('custom:test', action => {
   console.log('[test]', action.data);

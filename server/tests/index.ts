@@ -6,9 +6,9 @@ const server = new ScriptBridgeServer({ port: 8000 });
 server.start();
 server.on('serverOpen', () => console.log('[Event] serverOpen'));
 server.on('serverClose', () => console.log('[Event] serverClose'));
-server.on('error', e => console.error('[Event] error', e.message));
-server.on('clientConnect', session => console.log('[Event] clientConnect', session.id));
-server.on('clientDisconnect', (session, reason) => console.log('[Event] clientDisconnect', session.id, DisconnectReason[reason]));
+server.on('error', e => console.error(new Date(), '[Event] error', e.message));
+server.on('clientConnect', session => console.log(new Date(), '[Event] clientConnect', session.id));
+server.on('clientDisconnect', (session, reason) => console.log(new Date(), '[Event] clientDisconnect', session.id, DisconnectReason[reason]));
 
 type TestAction = BaseAction<
   'custom:test',

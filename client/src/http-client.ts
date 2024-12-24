@@ -24,7 +24,7 @@ export class HttpClient {
     if (options?.headers) request.setHeaders(this.toHttpHeaders(options.headers))
     if (options?.timeout) request.setTimeout(options.timeout);
     const response = await http.request(request);
-    if (response.status !== 200) throw new Error(`Failed to GET ${path} with status ${response.status}`);
+    if (response.status !== 200) throw new Error(`(${response.status}) Failed to GET ${path}: ${response.body}`);
     return response.body;
   }
 
@@ -35,7 +35,7 @@ export class HttpClient {
     if (options?.body) request.setBody(options.body);
     if (options?.timeout) request.setTimeout(options.timeout);
     const response = await http.request(request);
-    if (response.status !== 200) throw new Error(`Failed to POST ${path} with status ${response.status}`);
+    if (response.status !== 200) throw new Error(`(${response.status}) Failed to POST ${path}: ${response.body}`);
     return response.body;
   }
 

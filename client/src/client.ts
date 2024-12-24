@@ -13,7 +13,7 @@ import {
   InternalActions,
   PROTOCOL_VERSION,
 } from '@script-bridge/protocol';
-import { NamespaceRequiredError, NoActiveSessionError } from './errors/index';
+import { NamespaceRequiredError, NoActiveSessionError } from './errors';
 import { HttpClient } from './http-client';
 import { ServerAction } from './server-action';
 import { registerHandlers } from './handlers';
@@ -73,7 +73,7 @@ export class ScriptBridgeClient {
         resolve();
       } catch (e) {
         console.error('[ScriptBridgeClient] Failed to create session:', e.message);
-        console.error('[ScriptBridgeClient] reconnect after 5 seconds...');
+        console.error('[ScriptBridgeClient] Reconnect after 5 seconds...');
         system.runTimeout(() => {
           this.connect().then(resolve);
         }, 5*20);
@@ -138,6 +138,8 @@ export class ScriptBridgeClient {
     respond: (data: ClientResponse) => void
   ): Promise<void> {
     const { requestId, channelId, data } = request;
+    const sessionId = this.currentSessonId!;
+
     const handler = this.actionHandlers.get(channelId);
     if (!handler) {
       console.error(new Date(), 'No handler found for channel:', channelId);
@@ -146,7 +148,7 @@ export class ScriptBridgeClient {
         error: true,
         message: `No handler found for channel: ${channelId}`,
         errorReason: ResponseErrorReason.UnhandledRequest,
-        sessionId: this.currentSessonId!,
+        sessionId,
         requestId,
       });
       return;
@@ -161,7 +163,7 @@ export class ScriptBridgeClient {
           respond({
             type: PayloadType.Response,
             error: false,
-            sessionId: this.currentSessonId!,
+            sessionId,
             requestId,
             data,
           });
@@ -177,7 +179,7 @@ export class ScriptBridgeClient {
         error: true,
         message: 'An error occurred while handling the request\n' + error.message,
         errorReason: ResponseErrorReason.InternalError,
-        sessionId: this.currentSessonId!,
+        sessionId,
         requestId,
       });
     }
@@ -200,9 +202,12 @@ export class ScriptBridgeClient {
     if (Array.isArray(body)) return body;
       
     if (body?.error && body.errorReason === ResponseErrorReason.InvalidSession) {
+      if (!this.isConnected) return [];
+      
       console.error('[ScriptBridgeClient] Invalid session, creating new session...');        
       this.destroy();
       await this.connect();
+      console.log('[ScriptBridgeClient] Reconnected to server!');
       return [];
     }
 
@@ -235,9 +240,9 @@ export class ScriptBridgeClient {
       const sentAt = Date.now();
       let requests: ServerRequest[];
       try {
-        requests = await this.queryData()
+        requests = await this.queryData();
       } catch (e) {
-        console.error(`[ScriptBridgeClient] fetch failed`);
+        console.error(`[ScriptBridgeClient] [query] fetch failed`);
         this.http.cancelAll('Request timeout');
         if (this.failCount++ >= 3) {
           this.destroy();
