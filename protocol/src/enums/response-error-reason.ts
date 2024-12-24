@@ -3,5 +3,6 @@ export enum ResponseErrorReason {
   Timeout,
   InvalidSession,
   UnhandledRequest,
-  InternalError
+  InternalError,
+  InvalidPayload,
 }
