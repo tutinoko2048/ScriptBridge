@@ -31,8 +31,6 @@
   "license": "MIT",
   "files": [
     "dist",
-    "bundle.mjs",
-    "build.mjs",
     "tsconfig.json"
   ]
 }
