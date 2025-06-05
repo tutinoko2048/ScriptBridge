@@ -35,8 +35,11 @@ server.start();
 
 ## Client
 ### Usage
+#### As bundled script
 - Download the client from the [releases](https://github.com/tutinoko2048/ScriptBridge/releases) page.
 - Put the client in your project.
+#### As npm package
+- This library is also vailable on npm as `@script-bridge/client`.
 
 > [!NOTE]
 > You need to enable Beta API toggle and allow `@minecraft/server-net` module in `[BDS]/config/permissions.json`.
