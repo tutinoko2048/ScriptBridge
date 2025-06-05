@@ -43,19 +43,22 @@ jobs:
       - name: "[protocol] Build and Publish"
         run: |
           cd protocol
-          npm run build
           npm publish --access public
           
       - name: "[server] Build and Publish"
         run: |
           cd server
-          npm run build
           npm publish --access public
 
-      - name: "[client] Build"
+      - name: "[client] Build and Publish"
         run: |
           cd client
-          npm run build
+          npm publish --access public
+
+      - name: "[client] Bundle"
+        run: |
+          cd client
+          npm run bundle
           zip script-bridge-client-v${{ env.CURRENT_VERSION }}.zip -j build/script-bridge-client.js build/script-bridge-client.d.ts
 
       - name: "[client] Upload Release Asset (ZIP)"

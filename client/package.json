@@ -2,12 +2,18 @@
   "name": "@script-bridge/client",
   "version": "0.2.2",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
-  "private": true,
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
   "scripts": {
     "test": "ts-node --project tests/tsconfig.json -r tsconfig-paths/register tests/index.ts",
     "watch": "node --watch build.mjs",
-    "build": "tsc --noEmit && node build.mjs",
-    "prepare": "ts-patch install -s"
+    "bundle": "tsc --noEmit && node bundle.mjs",
+    "prepare": "ts-patch install -s",
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@script-bridge/protocol": "*"
   },
   "devDependencies": {
     "@minecraft/server": "1.15.0-beta.1.21.30-stable",
@@ -23,7 +29,10 @@
   },
   "author": "tutinoko2048",
   "license": "MIT",
-  "dependencies": {
-    "@script-bridge/protocol": "*"
-  }
+  "files": [
+    "dist",
+    "bundle.mjs",
+    "build.mjs",
+    "tsconfig.json"
+  ]
 }
