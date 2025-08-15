@@ -1,4 +1,4 @@
-import { BaseAction } from '@script-bridge/protocol';
+import { BaseAction, DisconnectReason } from '@script-bridge/protocol';
 import { ScriptBridgeClient } from '../src';
 import { createInterface } from 'node:readline/promises';
 
@@ -6,13 +6,15 @@ const client = new ScriptBridgeClient({
   url: 'http://localhost:8000'
 });
 
-client.connect()
-  .then(() => {
-    console.log(new Date(), '[ScriptBridgeClient] connected!');
-  })
-  .catch(e => {
-    console.error(new Date(), '[ScriptBridgeClient] failed to connect', e.message);
-  });
+client.connect();
+
+client.on('connect', ({ sessionId }) => {
+  console.log(new Date(), '[ScriptBridgeClient] connected:', sessionId);
+});
+
+client.on('disconnect', ({ reason }) => {
+  console.log(new Date(), '[ScriptBridgeClient] disconnected:', DisconnectReason[reason]);
+});
 
 type TestAction = BaseAction<
   'custom:test',
@@ -28,12 +30,10 @@ const rl = createInterface({
 rl.on('line', async message => {
   if (message === '.connect') {
     await client.connect();
-    console.log(new Date(), '[ScriptBridgeClient] connected');
     return;
   }
   if (message === '.disconnect') {
     await client.disconnect();
-    console.log(new Date(), '[ScriptBridgeClient] disconnected');
     return;
   }
 

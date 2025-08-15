@@ -17,10 +17,11 @@ import { NamespaceRequiredError, NoActiveSessionError } from './errors';
 import { HttpClient } from './http-client';
 import { ServerAction } from './server-action';
 import { registerHandlers } from './handlers';
+import { Emitter } from './utils/emitter';
 
 type Awaitable<Value> = PromiseLike<Value> | Value;
 
-interface ClientOptions {
+export interface ClientOptions {
   /** Server URL (including port) */
   url: string;
   /** Custom identifier for client, this will be sent to the server */
@@ -30,7 +31,12 @@ interface ClientOptions {
 
 type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
 
-export class ScriptBridgeClient {
+export interface ClientEvents {
+  'connect': { sessionId: string };
+  'disconnect': { reason: DisconnectReason };
+}
+
+export class ScriptBridgeClient extends Emitter<ClientEvents> {
   public static readonly PROTOCOL_VERSION = PROTOCOL_VERSION;
 
   /** Custom identifier for client, this will be sent to the server */
@@ -49,6 +55,7 @@ export class ScriptBridgeClient {
   private queryInterval: number | null = null;
   
   constructor(options: ClientOptions) {
+    super();
     this.http.baseUrl = options.url;
     if (options.clientId !== undefined) this.clientId = options.clientId;
     if (options.connectionMode !== undefined) this.connectionMode = options.connectionMode;
@@ -84,6 +91,7 @@ export class ScriptBridgeClient {
         this.reconnectAttempts = 0;
         this.failCount = 0;
         this.isReconnecting = false;
+        this.emit('connect', { sessionId: this.currentSessonId! });
         resolve();
       } catch (e) {
         this.isReconnecting = false;
@@ -119,6 +127,8 @@ export class ScriptBridgeClient {
     
     this.http.cancelAll(DisconnectReason[reason]);
     this.destroy();
+    
+    this.emit('disconnect', { reason });
   }
 
   public destroy() {
@@ -318,6 +328,8 @@ export class ScriptBridgeClient {
 
   private scheduleReconnect(): void {
     if (this.isReconnecting) return;
+    
+    this.emit('disconnect', { reason: DisconnectReason.ConnectionLost });
     
     this.destroy();
     
