@@ -21,8 +21,8 @@ importers:
   client:
     dependencies:
       '@script-bridge/protocol':
-        specifier: '*'
-        version: 0.3.0
+        specifier: workspace:*
+        version: link:../protocol
     devDependencies:
       '@minecraft/server':
         specifier: 1.15.0-beta.1.21.30-stable
@@ -48,8 +48,8 @@ importers:
         specifier: ^1.18.2
         version: 1.18.2(hono@4.9.2)
       '@script-bridge/protocol':
-        specifier: '*'
-        version: 0.3.0
+        specifier: workspace:*
+        version: link:../protocol
       hono:
         specifier: ^4.9.1
         version: 4.9.2
@@ -367,9 +367,6 @@ packages:
     resolution: {integrity: sha512-CvUo2ixeIQGtF6WvuB87XWqPQkoFAFqW+HUo/WzHwuHDvIwZCtjdWXoYCcr06iKGydiqTclC4jU/TNObC/xKZg==}
     cpu: [x64]
     os: [win32]
-
-  '@script-bridge/protocol@0.3.0':
-    resolution: {integrity: sha512-l9al+UAPvkDg3ljZo4XzxT2C/llsl7Wd/T610s+z/JGyt05pykK2xfl1DkrBwP5wQW2qJzG/aWGJNO1G+stwnA==}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -1096,8 +1093,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.46.2':
     optional: true
-
-  '@script-bridge/protocol@0.3.0': {}
 
   '@tsconfig/node10@1.0.11': {}
 

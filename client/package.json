@@ -13,7 +13,7 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "@script-bridge/protocol": "*"
+    "@script-bridge/protocol": "workspace:*"
   },
   "devDependencies": {
     "@minecraft/server": "1.15.0-beta.1.21.30-stable",

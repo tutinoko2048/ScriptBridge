@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.18.2",
-    "@script-bridge/protocol": "*",
+    "@script-bridge/protocol": "workspace:*",
     "hono": "^4.9.1"
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
