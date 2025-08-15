@@ -14,12 +14,12 @@
   },
   "devDependencies": {
     "@minecraft/server": "1.14.0",
-    "@types/express": "^5.0.0",
     "@types/node": "^22.7.4"
   },
   "dependencies": {
+    "@hono/node-server": "^1.18.2",
     "@script-bridge/protocol": "*",
-    "express": "^4.21.0"
+    "hono": "^4.9.1"
   },
   "homepage": "https://github.com/tutinoko2048/ScriptBridge",
   "repository": {

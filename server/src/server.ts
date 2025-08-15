@@ -1,6 +1,6 @@
-import * as http from 'node:http';
 import { EventEmitter } from 'node:events';
-import express from 'express';
+import { Hono } from 'hono';
+import { serve, ServerType } from '@hono/node-server';
 import {
   BaseAction,
   InternalActions,
@@ -45,29 +45,21 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
   public readonly requestIntervalTicks: number = 8;
   public readonly timeoutThresholdMultiplier: number = 20;
 
-  private readonly server: http.Server;
-  private readonly app: express.Application;
   private readonly actionHandlers = new Map<string, ActionHandler<BaseAction>>();
+  private readonly app: Hono;
+  private server: ServerType;
 
   constructor(options: ServerOptions) {
     super();
-    this.app = express();
-    this.server = http.createServer(this.app);
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+    this.app = new Hono();
 
     this.port = options.port;
     if (options.requestIntervalTicks !== undefined) this.requestIntervalTicks = options.requestIntervalTicks;
     if (options.timeoutThresholdMultiplier !== undefined) this.timeoutThresholdMultiplier = options.timeoutThresholdMultiplier;
 
-    this.app.get<
-      void,
-      ServerResponse<InternalActions.SessionCreate['response']>,
-      void,
-      InternalActions.SessionCreate['request']
-    >('/new', (_, res) => {
+    this.app.get('/new', (c) => {
       const session = new Session(this);
-      res.json({
+      return c.json<ServerResponse<InternalActions.SessionCreate['response']>>({
         type: PayloadType.Response,
         data: {
           sessionId: session.id,
@@ -76,63 +68,53 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
       });
     });
 
-    this.app.get<
-      void,
-      ServerResponse | ServerRequest[],
-      void,
-      { sessionId: string }
-    >('/query', (req, res) => {
-      const sessionId = req.headers['session-id'] as string;
+    this.app.get('/query', (c) => {
+      const sessionId = c.req.header('session-id');
       const session = sessionId ? this.sessions.get(sessionId) : undefined;
       if (!session) {
-        res.json({
+        return c.json<ServerResponse>({
           type: PayloadType.Response,
           error: true,
           message: 'Session is invalid',
           errorReason: ResponseErrorReason.InvalidSession,
         });
-        return;
       }
 
       const requests = session.getQueue();
-      res.json(requests);
-
+      
       for (const request of requests) this.emit('requestSend', request, session);
       this.emit('queryReceive', session);
+      
+      return c.json<ServerRequest[]>(requests);
     });
 
-    this.app.post<
-      void,
-      ServerResponse,
-      ClientRequest | ClientResponse 
-    >('/query', (req, res) => {
-      const body = req.body;
+    this.app.post('/query', async (c) => {
+      const body = await c.req.json<ClientRequest | ClientResponse>();
       const session = this.sessions.get(body.sessionId);
 
       if (!session) {
-        res.json({
+        return c.json<ServerResponse>({
           type: PayloadType.Response,
           error: true,
           errorReason: ResponseErrorReason.InvalidSession,
           message: 'Invalid session',
         });
-        return;
       }
 
       if (body.type === PayloadType.Request) {
         this.emit('requestReceive', body, session);
-        this.handleRequest(session, body, (data: ServerResponse) => {
-          res.json(data);
-          this.emit('responseSend', data, session);
-        });
+        
+        const response = await this.handleRequest(session, body);
+        this.emit('responseSend', response, session);
+        return c.json<ServerResponse>(response);
 
       } else if (body.type === PayloadType.Response) {
         this.handleResponse(session, body);
         this.emit('responseReceive', body, session);
-        
-        res.sendStatus(200);
+        return c.body(null, 200);
+
       } else {
-        res.json({
+        return c.json<ServerResponse>({
           type: PayloadType.Response,
           error: true,
           errorReason: ResponseErrorReason.InvalidPayload,
@@ -145,8 +127,11 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
   }
 
   public async start(): Promise<void> {
-    return new Promise<void>(resolve => {
-      this.server.listen(this.port, () => {
+    return new Promise<void>((resolve) => {
+      this.server = serve({
+        fetch: this.app.fetch,
+        port: this.port,
+      }, () => {
         this.emit('serverOpen');
         resolve();
       });
@@ -185,38 +170,45 @@ export class ScriptBridgeServer extends EventEmitter<ServerEvents> {
     this.actionHandlers.set(channelId, handler);
   }
 
-  private async handleRequest(session: Session, request: ClientRequest, respond: (data: ServerResponse) => void): Promise<void> {
+  private async handleRequest(session: Session, request: ClientRequest): Promise<ServerResponse> {
     const handler = this.actionHandlers.get(request.channelId);
     if (!handler) {
       this.emit('error', new UnhandledRequestError(request.channelId));
-      respond({
+      return {
         type: PayloadType.Response,
         error: true,
         errorReason: ResponseErrorReason.UnhandledRequest,
         message: `No handler found for channel: ${request.channelId}`,
-      });
-      return;
+      };
     }
-    let isResponded = false;
+
     try {
+      const response: ServerResponse = {
+        type: PayloadType.Response,
+        error: false,
+        data: undefined,
+      };
+
       const action = new ClientAction(
         request.data,
         (data) => {
-          if (isResponded) return;
-          respond({ error: false, data, type: PayloadType.Response });
-          isResponded = true;
+          response.data = data;
         },
         session,
       );
+      
       await handler(action);
+      
+      return response;
+      
     } catch (error) {
       this.emit('error', error);
-      if (!isResponded) respond({
+      return {
         type: PayloadType.Response,
         error: true,
         errorReason: ResponseErrorReason.InternalError,
         message: 'An error occurred while handling the request\n' + error.message,
-      });
+      };
     }
   }
 

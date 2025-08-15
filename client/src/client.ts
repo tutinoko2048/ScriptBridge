@@ -184,54 +184,54 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
   }
 
   private async handleRequest(
-    request: ServerRequest,
-    respond: (data: ClientResponse) => void
-  ): Promise<void> {
+    request: ServerRequest
+  ): Promise<ClientResponse> {
     const { requestId, channelId, data } = request;
     const sessionId = this.currentSessonId!;
 
     const handler = this.actionHandlers.get(channelId);
     if (!handler) {
       console.error('[ScriptBridge] No handler found for channel:', channelId);
-      respond({
+      return {
         type: PayloadType.Response,
         error: true,
         message: `No handler found for channel: ${channelId}`,
         errorReason: ResponseErrorReason.UnhandledRequest,
         sessionId,
         requestId,
-      });
-      return;
+      };
     }
 
-    let isResponded = false;
     try {
+      const response: ClientResponse = {
+        type: PayloadType.Response,
+        error: false,
+        sessionId,
+        requestId,
+        data: undefined,
+      };
+
       const action = new ServerAction(
         data,
         (data: unknown) => {
-          if (isResponded) return;
-          respond({
-            type: PayloadType.Response,
-            error: false,
-            sessionId,
-            requestId,
-            data,
-          });
-          isResponded = true;
+          response.data = data;
         }
       );
+
       await handler(action);
+
+      return response;
 
     } catch (error) {
       console.error('[ScriptBridge] Error while handling request:', channelId, error);
-      if (!isResponded) respond({
+      return {
         type: PayloadType.Response,
         error: true,
         message: 'An error occurred while handling the request\n' + error.message,
         errorReason: ResponseErrorReason.InternalError,
         sessionId,
         requestId,
-      });
+      };
     }
   }
 
@@ -312,14 +312,17 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
         return;
       }
 
-      for (const request of requests) {
-        this.handleRequest(request, response => {
-          this.http.POST('/query', {
+      requests.forEach(async (request) => {
+        const response = await this.handleRequest(request);
+        try {
+          await this.http.POST('/query', {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(response)
-          }).catch(e => console.error('[ScriptBridge] Failed to send response:', e));
-        });
-      }
+          });
+        } catch (e) {
+          console.error('[ScriptBridge] Failed to send response:', e.message);
+        }
+      });
 
       this.deltaTimes.push(Date.now() - sentAt);
       if (this.deltaTimes.length > 10) this.deltaTimes.shift();
