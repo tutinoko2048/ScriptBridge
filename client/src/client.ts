@@ -41,8 +41,11 @@ export class ScriptBridgeClient {
   private readonly http = new HttpClient();
   private readonly actionHandlers = new Map<string, ActionHandler<BaseAction>>();
   private readonly deltaTimes: number[] = [];
-  private currentSessonId: string | null = null;
+  private readonly maxReconnectAttempts = 10;
+  private reconnectAttempts = 0;
+  private isReconnecting = false;
   private failCount = 0;
+  private currentSessonId: string | null = null;
   private queryInterval: number | null = null;
   
   constructor(options: ClientOptions) {
@@ -54,7 +57,7 @@ export class ScriptBridgeClient {
   }
 
   get isConnected() {
-    return !!this.currentSessonId;
+    return !!this.currentSessonId && !this.isReconnecting;
   }
 
   get averagePing() {
@@ -63,36 +66,69 @@ export class ScriptBridgeClient {
   }
 
   public connect() {
-    return new Promise<void>(async (resolve) => {
+    return new Promise<void>(async (resolve, reject) => {
+      if (this.isReconnecting) {
+        console.warn('[ScriptBridgeClient] Already reconnecting, skipping...');
+        return;
+      }
+
+      this.isReconnecting = true;
+      
       try {
         await this.createSession();
         await this.send<InternalActions.Connect>(InternalAction.Connect, {
           clientId: this.clientId,
           protocolVersion: ScriptBridgeClient.PROTOCOL_VERSION
         });
+        
+        this.reconnectAttempts = 0;
+        this.failCount = 0;
+        this.isReconnecting = false;
         resolve();
       } catch (e) {
+        this.isReconnecting = false;
         console.error('[ScriptBridgeClient] Failed to create session:', e.message);
-        console.error('[ScriptBridgeClient] Reconnect after 5 seconds...');
+        
+        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+          console.error('[ScriptBridgeClient] Max reconnect attempts reached, giving up');
+          reject(new Error('Max reconnect attempts reached'));
+          return;
+        }
+        
+        const backoffSeconds = Math.min(Math.pow(2, this.reconnectAttempts), 60);
+        const backoffTicks = backoffSeconds * 20;
+        
+        this.reconnectAttempts++;
+        console.error(`[ScriptBridgeClient] Reconnect after ${backoffSeconds} seconds... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        
         system.runTimeout(() => {
-          this.connect().then(resolve);
-        }, 5*20);
+          this.connect().then(resolve).catch(reject);
+        }, backoffTicks);
       }
     });
   }
 
   public async disconnect(reason: DisconnectReason = DisconnectReason.Disconnect) {
     if (!this.currentSessonId) throw new NoActiveSessionError();
-    await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
+    
+    try {
+      await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
+    } catch (e) {
+      console.warn('[ScriptBridgeClient] Failed to send disconnect message:', e.message);
+    }
+    
     this.http.cancelAll(DisconnectReason[reason]);
     this.destroy();
   }
 
   public destroy() {
     this.stopInterval();
+    this.http.cancelAll('Client destroyed');
     this.currentSessonId = null;
     this.deltaTimes.length = 0;
     this.failCount = 0;
+    this.isReconnecting = false;
+    this.reconnectAttempts = 0;
   }
 
   public async send<A extends BaseAction = BaseAction>(
@@ -101,7 +137,11 @@ export class ScriptBridgeClient {
   ): Promise<ServerResponse<A['response']>> {
     if (!channelId.includes(':')) throw new NamespaceRequiredError(channelId);
 
-    if (!this.isConnected) throw new NoActiveSessionError();
+    // セッションIDがあり、再接続中でない場合、または内部アクションの場合は送信を許可
+    if (!this.currentSessonId) throw new NoActiveSessionError();
+    if (this.isReconnecting && !channelId.startsWith('__internal__:')) {
+      throw new NoActiveSessionError();
+    }
     
     const payload: ClientRequest = {
       data,
@@ -197,17 +237,16 @@ export class ScriptBridgeClient {
       body = JSON.parse(rawBody);
     } catch {
       console.error('[ScriptBridgeClient] Failed to parse query response');
+      return [];
     }
 
     if (Array.isArray(body)) return body;
       
     if (body?.error && body.errorReason === ResponseErrorReason.InvalidSession) {
-      if (!this.isConnected) return [];
+      if (!this.isConnected || this.isReconnecting) return [];
       
       console.error('[ScriptBridgeClient] Invalid session, creating new session...');        
-      this.destroy();
-      await this.connect();
-      console.log('[ScriptBridgeClient] Reconnected to server!');
+      this.scheduleReconnect();
       return [];
     }
 
@@ -225,34 +264,40 @@ export class ScriptBridgeClient {
     } catch (e) {
       throw new Error('[ScriptBridgeClient] Failed to parse response body');
     }
-    if (body.error) throw new Error(`[ScriptBridgeClient] Failed to create session: ${body.message}, reason: ${ResponseErrorReason[body.errorReason]}`);
     
-    this.currentSessonId = body.data.sessionId;
-    this.startInterval(body.data.requestIntervalTicks);
+    // errorプロパティが存在し、かつtrueの場合のみエラーとして扱う
+    if ('error' in body && body.error) {
+      throw new Error(`[ScriptBridgeClient] Failed to create session: ${body.message}, reason: ${ResponseErrorReason[body.errorReason]}`);
+    }
+    
+    // 成功レスポンスの場合
+    if ('data' in body) {
+      this.currentSessonId = body.data.sessionId;
+      this.startInterval(body.data.requestIntervalTicks);
+    } else {
+      throw new Error('[ScriptBridgeClient] Invalid response format: missing data property');
+    }
   }
 
   private startInterval(intervalTicks: number): void {
     if (this.queryInterval !== null) return;
 
     this.queryInterval = system.runInterval(async () => {
-      if (!this.isConnected) return;
+      if (!this.isConnected || this.isReconnecting) return;
 
       const sentAt = Date.now();
       let requests: ServerRequest[];
       try {
         requests = await this.queryData();
+        this.failCount = 0;
       } catch (e) {
-        console.error(`[ScriptBridgeClient] [query] fetch failed`);
+        console.error(`[ScriptBridgeClient] [query] fetch failed:`, e.message || e);
         this.http.cancelAll('Request timeout');
-        if (this.failCount++ >= 3) {
-          this.destroy();
-          console.error('[ScriptBridgeClient] Destroyed session due to multiple timeouts');
-          console.error('[ScriptBridgeClient] Reconnect after 5 seconds...');          
-          this.failCount = 0;
-          
-          system.runTimeout(() => {
-            this.connect().then(() => console.log('[ScriptBridgeClient] Reconnected to server!'));
-          }, 5*20);
+        
+        this.failCount++;
+        if (this.failCount >= 3) {
+          console.error('[ScriptBridgeClient] Multiple timeouts detected, reconnecting...');
+          this.scheduleReconnect();
         }
         return;
       }
@@ -269,6 +314,25 @@ export class ScriptBridgeClient {
       this.deltaTimes.push(Date.now() - sentAt);
       if (this.deltaTimes.length > 10) this.deltaTimes.shift();
     }, intervalTicks);
+  }
+
+  private scheduleReconnect(): void {
+    if (this.isReconnecting) return;
+    
+    this.destroy();
+    
+    const backoffSeconds = Math.min(Math.pow(2, this.reconnectAttempts), 60);
+    const backoffTicks = backoffSeconds * 20;
+    
+    console.error(`[ScriptBridgeClient] Reconnect after ${backoffSeconds} seconds...`);
+    
+    system.runTimeout(() => {
+      this.connect().then(() => {
+        console.log('[ScriptBridgeClient] Reconnected to server!');
+      }).catch(e => {
+        console.error('[ScriptBridgeClient] Reconnection failed:', e.message);
+      });
+    }, backoffTicks);
   }
 
   private stopInterval(): void {    
