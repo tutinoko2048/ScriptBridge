@@ -1,6 +1,6 @@
 {
   "name": "@script-bridge/client",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "two-way communication system between ScriptAPI and backend server using http request",
   "main": "dist/index.mjs",
   "types": "dist/index.d.mts",
