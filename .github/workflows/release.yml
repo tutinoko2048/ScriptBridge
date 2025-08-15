@@ -21,11 +21,6 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,6 +28,16 @@ jobs:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      
+      - name: Update npm
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Read package version
         id: version
