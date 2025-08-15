@@ -8,7 +8,7 @@ import type { ScriptBridgeClient } from './client';
 export const registerHandlers = (client: ScriptBridgeClient) => {
   client.registerHandler<InternalActions.Disconnect>(InternalAction.Disconnect, (action) => {
     action.respond();
-    console.warn(`[ScriptBridgeClient] disconnected from server: ${DisconnectReason[action.data.reason]}`);
+    console.warn(`[ScriptBridge] disconnected from server: ${DisconnectReason[action.data.reason]}`);
     client.destroy();
   });
 

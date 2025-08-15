@@ -75,7 +75,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
   public connect() {
     return new Promise<void>(async (resolve, reject) => {
       if (this.isReconnecting) {
-        console.warn('[ScriptBridgeClient] Already reconnecting, skipping...');
+        console.warn('[ScriptBridge] Already reconnecting, skipping...');
         return;
       }
 
@@ -95,10 +95,10 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
         resolve();
       } catch (e) {
         this.isReconnecting = false;
-        console.error('[ScriptBridgeClient] Failed to create session:', e.message);
+        console.error('[ScriptBridge] Failed to create session:', e.message);
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          console.error('[ScriptBridgeClient] Max reconnect attempts reached, giving up');
+          console.error('[ScriptBridge] Max reconnect attempts reached, giving up');
           reject(new Error('Max reconnect attempts reached'));
           return;
         }
@@ -107,7 +107,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
         const backoffTicks = backoffSeconds * 20;
         
         this.reconnectAttempts++;
-        console.error(`[ScriptBridgeClient] Reconnect after ${backoffSeconds} seconds... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        console.error(`[ScriptBridge] Reconnect after ${backoffSeconds} seconds... (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
         
         system.runTimeout(() => {
           this.connect().then(resolve).catch(reject);
@@ -122,7 +122,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
     try {
       await this.send<InternalActions.Disconnect>(InternalAction.Disconnect, { reason });
     } catch (e) {
-      console.warn('[ScriptBridgeClient] Failed to send disconnect message:', e.message);
+      console.warn('[ScriptBridge] Failed to send disconnect message:', e.message);
     }
     
     this.http.cancelAll(DisconnectReason[reason]);
@@ -168,7 +168,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
     try {
       return JSON.parse(rawBody);
     } catch (e) {
-      throw new Error('[ScriptBridgeClient] Failed to parse response body');
+      throw new Error('Failed to parse response body');
     }
   }
 
@@ -178,7 +178,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
   ): void {
     if (!channelId.includes(':')) throw new NamespaceRequiredError(channelId);
     if (this.actionHandlers.has(channelId)) {
-      console.warn('[ScriptBridge::registerHandler] Overwriting existing handler for channel:', channelId);
+      console.warn('[ScriptBridge] Overwriting existing handler for channel:', channelId);
     }
     this.actionHandlers.set(channelId, handler);
   }
@@ -192,7 +192,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
 
     const handler = this.actionHandlers.get(channelId);
     if (!handler) {
-      console.error(new Date(), 'No handler found for channel:', channelId);
+      console.error('[ScriptBridge] No handler found for channel:', channelId);
       respond({
         type: PayloadType.Response,
         error: true,
@@ -223,7 +223,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
       await handler(action);
 
     } catch (error) {
-      console.error(new Date(), 'Error while handling request:', channelId, error);
+      console.error('[ScriptBridge] Error while handling request:', channelId, error);
       if (!isResponded) respond({
         type: PayloadType.Response,
         error: true,
@@ -246,7 +246,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
     try {
       body = JSON.parse(rawBody);
     } catch {
-      console.error('[ScriptBridgeClient] Failed to parse query response');
+      console.error('[ScriptBridge] Failed to parse query response');
       return [];
     }
 
@@ -254,13 +254,13 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
       
     if (body?.error && body.errorReason === ResponseErrorReason.InvalidSession) {
       if (!this.isConnected || this.isReconnecting) return [];
-      
-      console.error('[ScriptBridgeClient] Invalid session, creating new session...');        
+
+      console.error('[ScriptBridge] Invalid session, creating new session...');
       this.scheduleReconnect();
       return [];
     }
 
-    console.error(`[ScriptBridgeClient] Unexpected response: ${JSON.stringify(body)}`);
+    console.error(`[ScriptBridge] Unexpected response: ${JSON.stringify(body)}`);
     return [];
   }
 
@@ -272,12 +272,12 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
     try {
       body = JSON.parse(rawBody);
     } catch (e) {
-      throw new Error('[ScriptBridgeClient] Failed to parse response body');
+      throw new Error('Failed to parse response body');
     }
     
     // errorプロパティが存在し、かつtrueの場合のみエラーとして扱う
     if ('error' in body && body.error) {
-      throw new Error(`[ScriptBridgeClient] Failed to create session: ${body.message}, reason: ${ResponseErrorReason[body.errorReason]}`);
+      throw new Error(`Failed to create session: ${body.message}, reason: ${ResponseErrorReason[body.errorReason]}`);
     }
     
     // 成功レスポンスの場合
@@ -285,7 +285,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
       this.currentSessonId = body.data.sessionId;
       this.startInterval(body.data.requestIntervalTicks);
     } else {
-      throw new Error('[ScriptBridgeClient] Invalid response format: missing data property');
+      throw new Error('Invalid response format: missing data property');
     }
   }
 
@@ -301,12 +301,12 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
         requests = await this.queryData();
         this.failCount = 0;
       } catch (e) {
-        console.error(`[ScriptBridgeClient] [query] fetch failed:`, e.message || e);
+        console.error(`[ScriptBridge] [query] fetch failed:`, e.message || e);
         this.http.cancelAll('Request timeout');
         
         this.failCount++;
         if (this.failCount >= 3) {
-          console.error('[ScriptBridgeClient] Multiple timeouts detected, reconnecting...');
+          console.error('[ScriptBridge] Multiple timeouts detected, reconnecting...');
           this.scheduleReconnect();
         }
         return;
@@ -317,7 +317,7 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
           this.http.POST('/query', {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(response)
-          }).catch(e => console.error('[ScriptBridgeClient] Failed to send response:', e));
+          }).catch(e => console.error('[ScriptBridge] Failed to send response:', e));
         });
       }
 
@@ -336,13 +336,13 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
     const backoffSeconds = Math.min(Math.pow(2, this.reconnectAttempts), 60);
     const backoffTicks = backoffSeconds * 20;
     
-    console.error(`[ScriptBridgeClient] Reconnect after ${backoffSeconds} seconds...`);
+    console.error(`[ScriptBridge] Reconnect after ${backoffSeconds} seconds...`);
     
     system.runTimeout(() => {
       this.connect().then(() => {
-        console.log('[ScriptBridgeClient] Reconnected to server!');
+        console.log('[ScriptBridge] Reconnected to server!');
       }).catch(e => {
-        console.error('[ScriptBridgeClient] Reconnection failed:', e.message);
+        console.error('[ScriptBridge] Reconnection failed:', e.message);
       });
     }, backoffTicks);
   }
