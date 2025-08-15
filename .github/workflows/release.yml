@@ -48,9 +48,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: "Debug: Check npm authentication"
+        run: |
+          npm whoami
+          npm config get registry
+          
       - name: "[protocol] Build and Publish"
         run: |
           cd protocol
+          npm whoami
           pnpm publish --no-git-checks --access public
       - name: "[server] Build and Publish"
         run: |
@@ -66,14 +72,14 @@ jobs:
         run: |
           cd client
           pnpm run bundle
-          zip script-bridge-client-v${{ env.CURRENT_VERSION }}.zip -j build/script-bridge-client.js build/script-bridge-client.d.ts
+          zip script-bridge-client-v${{ steps.version.outputs.version }}.zip -j build/script-bridge-client.js build/script-bridge-client.d.ts
 
       - name: "[client] Upload Release Asset (ZIP)"
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: client/script-bridge-client-v${{ env.CURRENT_VERSION }}.zip
-          asset_name: script-bridge-client-v${{ env.CURRENT_VERSION }}.zip
+          asset_path: client/script-bridge-client-v${{ steps.version.outputs.version }}.zip
+          asset_name: script-bridge-client-v${{ steps.version.outputs.version }}.zip
           asset_content_type: application/zip
           
       - name: "[client] Upload Release Asset (DTS)"
