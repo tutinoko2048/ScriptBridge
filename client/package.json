@@ -10,7 +10,7 @@
     "bundle": "tsc --noEmit && node bundle.mjs",
     "prepare": "ts-patch install -s",
     "build": "tsup",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@script-bridge/protocol": "*"

@@ -10,7 +10,7 @@
   "scripts": {
     "test": "ts-node tests/index.ts",
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "@minecraft/server": "1.14.0",

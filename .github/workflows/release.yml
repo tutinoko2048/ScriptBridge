@@ -21,15 +21,18 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: 'https://registry.npmjs.org'
-      
-      - name: Update npm
-        run: npm install -g npm@latest
+          cache: 'pnpm'
 
       - name: Read package version
         id: version
@@ -43,27 +46,26 @@ jobs:
           echo "CURRENT_VERSION=$package_version" >> $GITHUB_ENV
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: "[protocol] Build and Publish"
         run: |
           cd protocol
-          npm publish --access public
-          
+          pnpm publish --access public
       - name: "[server] Build and Publish"
         run: |
           cd server
-          npm publish --access public
+          pnpm publish --access public
 
       - name: "[client] Build and Publish"
         run: |
           cd client
-          npm publish --access public
+          pnpm publish --access public
 
       - name: "[client] Bundle"
         run: |
           cd client
-          npm run bundle
+          pnpm run bundle
           zip script-bridge-client-v${{ env.CURRENT_VERSION }}.zip -j build/script-bridge-client.js build/script-bridge-client.d.ts
 
       - name: "[client] Upload Release Asset (ZIP)"
