@@ -51,16 +51,16 @@ jobs:
       - name: "[protocol] Build and Publish"
         run: |
           cd protocol
-          pnpm publish --access public
+          pnpm publish --no-git-checks --access public
       - name: "[server] Build and Publish"
         run: |
           cd server
-          pnpm publish --access public
+          pnpm publish --no-git-checks --access public
 
       - name: "[client] Build and Publish"
         run: |
           cd client
-          pnpm publish --access public
+          pnpm publish --no-git-checks --access public
 
       - name: "[client] Bundle"
         run: |
