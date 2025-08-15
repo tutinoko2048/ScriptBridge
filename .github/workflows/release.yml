@@ -43,20 +43,14 @@ jobs:
             echo "Error: Release version $release_version does not match package version $package_version"
             exit 1
           fi
-          echo "CURRENT_VERSION=$package_version" >> $GITHUB_ENV
+          echo "version=$package_version" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: "Debug: Check npm authentication"
-        run: |
-          npm whoami
-          npm config get registry
-          
       - name: "[protocol] Build and Publish"
         run: |
           cd protocol
-          npm whoami
           pnpm publish --no-git-checks --access public
       - name: "[server] Build and Publish"
         run: |
