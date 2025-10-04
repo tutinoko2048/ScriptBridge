@@ -29,7 +29,7 @@ export interface ClientOptions {
   connectionMode?: ConnectionMode;
 }
 
-type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
+export type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
 
 export interface ClientEvents {
   'connect': { sessionId: string };
