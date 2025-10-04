@@ -15,11 +15,9 @@ import {
 } from '@script-bridge/protocol';
 import { NamespaceRequiredError, NoActiveSessionError } from './errors';
 import { HttpClient } from './http-client';
-import { ServerAction } from './server-action';
 import { registerHandlers } from './handlers';
 import { Emitter } from './utils/emitter';
-
-type Awaitable<Value> = PromiseLike<Value> | Value;
+import { ActionHandler } from './types';
 
 export interface ClientOptions {
   /** Server URL (including port) */
@@ -28,8 +26,6 @@ export interface ClientOptions {
   clientId?: string;
   connectionMode?: ConnectionMode;
 }
-
-export type ActionHandler<T extends BaseAction> = (action: ServerAction<T>) => Awaitable<void>;
 
 export interface ClientEvents {
   'connect': { sessionId: string };
@@ -211,14 +207,12 @@ export class ScriptBridgeClient extends Emitter<ClientEvents> {
         data: undefined,
       };
 
-      const action = new ServerAction(
+      await handler({
         data,
-        (data: unknown) => {
+        respond: (data) => {
           response.data = data;
-        }
-      );
-
-      await handler(action);
+        },
+      });
 
       return response;
 
